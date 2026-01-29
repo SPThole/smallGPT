@@ -1,6 +1,22 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import pandas as pd
+
+
+def count_params(model):
+    """Counts the params"""
+    num_params, shapes = 0,[]
+    for _,w in model.named_parameters():
+        try:
+            num_params = num_params + w.shape[0]*w.shape[1]
+        except:
+            num_params = num_params + w.shape[0]
+        shapes.append([_,w.shape])
+    df = pd.DataFrame(shapes,columns=['Name',"Shape"])
+    return num_params,df
+
+
 
 class GPT2ModelBlock(nn.Module):
     """
@@ -84,11 +100,13 @@ class GPT2Model(nn.Module):
                  num_layers,
                  up_proj_size=4*512, 
                  gqa_factor=1,
+                 tied_embedding = True
                  ):
         super().__init__()
 
         self.token_embedding = nn.Embedding(vocab_size, embedding_size)
         self.positional_embedding = nn.Embedding(context_length, embedding_size)
+        self.tied_embedding = tied_embedding
 
         self.layers = nn.ModuleList([
             GPT2ModelBlock(
@@ -101,6 +119,8 @@ class GPT2Model(nn.Module):
         ])
         self.ln_f = nn.LayerNorm(embedding_size)
         self.head = nn.Linear(embedding_size, vocab_size, bias=False)
+        if self.tied_embedding:
+            self.head.weight = self.token_embedding.weight
 
     def forward(self, input_ids, labels):
         """Forward pass for the GPT2 Model."""
@@ -119,5 +139,22 @@ class GPT2Model(nn.Module):
             loss = loss_fct(logits.view(-1, logits.size(-1)), labels.view(-1))
             return logits, loss
         return logits
-        
-         
+    
+
+if __name__ == "__main__":
+    model = GPT2Model(
+    vocab_size=50257,
+    embedding_size=768,
+    context_length=1024,
+    head_dim=64,
+    num_heads=12,
+    num_layers=12,
+    up_proj_size=3072,
+    gqa_factor=1,
+    tied_embedding=True)
+
+    counts, details = count_params(model)
+    print(f"TOTAL PARAM COUNT IS {counts/10**6} M")
+    print(details.head(30))
+
+    
