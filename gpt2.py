@@ -276,11 +276,11 @@ if __name__ == "__main__":
     from transformers import AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
     s = time.time()
-    out = model.generate(tokenizer,"hi, How can I help you?",100,use_cache=False)
+    out = model.generate(tokenizer,"hi, How can I help you?",300,use_cache=False)
     t = time.time()
     print("Time taken without cache for 10 tokens",t-s)
     s = time.time()
-    out = model.generate(tokenizer,"hi, How can I help you?",100,use_cache=True)
+    out = model.generate(tokenizer,"hi, How can I help you?",300,use_cache=True)
     t = time.time()
     print("Time taken with cache for 10 tokens",t-s)
     
