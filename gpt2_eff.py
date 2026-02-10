@@ -47,14 +47,14 @@ class GPT2ModelBlock(nn.Module):
         self.cache = {}
         self.layer_norm_1 = nn.LayerNorm(self.embedding_size)
         self.layer_norm_2 = nn.LayerNorm(self.embedding_size)
-        self.WK = nn.Linear(self.embedding_size,self.num_heads*self.head_dim//self.gqa_factor)
-        self.WV = nn.Linear(self.embedding_size,self.num_heads*self.head_dim//self.gqa_factor)
-        self.WQ = nn.Linear(self.embedding_size,self.num_heads*self.head_dim)
+        self.WK = nn.Linear(self.embedding_size,self.num_heads*self.head_dim//self.gqa_factor,bias=False)
+        self.WV = nn.Linear(self.embedding_size,self.num_heads*self.head_dim//self.gqa_factor,bias=False)
+        self.WQ = nn.Linear(self.embedding_size,self.num_heads*self.head_dim,bias=False)
         self.gelu = nn.GELU()
         self.dropout = nn.Dropout(0.1)
-        self.QKV_linear = nn.Linear(self.num_heads*self.head_dim,self.embedding_size)
-        self.up_proj = nn.Linear(self.embedding_size,self.up_proj_size)
-        self.down_proj = nn.Linear(self.up_proj_size,self.embedding_size)
+        self.QKV_linear = nn.Linear(self.num_heads*self.head_dim,self.embedding_size,bias=False)
+        self.up_proj = nn.Linear(self.embedding_size,self.up_proj_size,bias=False)
+        self.down_proj = nn.Linear(self.up_proj_size,self.embedding_size,bias=False)
         # self.first_pass =  True
         self.register_buffer('mask', torch.tril(torch.ones(self.context_length, self.context_length))==0)
       
