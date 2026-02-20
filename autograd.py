@@ -82,9 +82,11 @@ class Tensor:
         output._backwards = _backwards
         output.operation = 'pow'
         return output
-
-
     
+    def __sub__(self,tensor_to_sub):
+        return self + -1*tensor_to_sub
+    
+
     def backwards(self):
 
         # topological order all of the children in the graph
@@ -140,15 +142,13 @@ if __name__ == "__main__":
     a = Tensor(3.0)
     b = Tensor(4.0)
     c = Tensor(5.0)
-    d = a**2*c + a+b + 4
+    d = a**2*c - a+b + 4 
     o = Tensor.trace(d)
-    # print([k.operation for k in o])
     dot = Tensor.draw_graph(d)
     dot.render("computation_graph", view=True)
-    # print(a.grad,b.grad,c.grad)
     d.backwards()
     print(a.grad,b.grad,c.grad)
-    # print(d.grad)
+
 
     
 
