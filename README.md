@@ -8,3 +8,4 @@ Lots and lots of exploratory code and implementation of everything in LLM from s
 *   [x] Flash Attention
 *   [x] Rotary Embeddings 
 *   [x] Perceptron, Linear, LayerNorm
+*   [x] Automatic Differentiation for scalar vars
