@@ -35,7 +35,7 @@ class GPT2ModelBlock(nn.Module):
                  gqa_factor=1,
                  context_length=1024,
                  use_mla = False,
-                 latent_dim_size = 512
+                 latent_dim_size = 512,
                  ):
         super().__init__()
 
@@ -396,7 +396,7 @@ class GPT2Model(nn.Module):
             # print(curr_len)
             # print(output.shape)
 
-        print_cache_memory(model, "Cache Memory After Generation")
+        print_cache_memory(self, "Cache Memory After Generation")
         self.clear_kv_cache()
        
         return torch.cat(output,dim=-1)

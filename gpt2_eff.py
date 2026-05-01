@@ -214,14 +214,16 @@ class GPT2Model(nn.Module):
                  num_layers,
                  up_proj_size=4*512, 
                  gqa_factor=1,
-                 tied_embedding = True
+                 tied_embedding = True,
+                 pad_token_id = -100
                  ):
         super().__init__()
 
         self.token_embedding = nn.Embedding(vocab_size, embedding_size)
         self.positional_embedding = nn.Embedding(context_length, embedding_size)
         self.tied_embedding = tied_embedding
-        self.loss_fct = nn.CrossEntropyLoss()
+        self.pad_token_id = pad_token_id
+        self.loss_fct = nn.CrossEntropyLoss(ignore_index=self.pad_token_id)
         self.track_len  = 0
 
         self.layers = nn.ModuleList([
@@ -238,6 +240,22 @@ class GPT2Model(nn.Module):
         self.head = nn.Linear(embedding_size, vocab_size, bias=False)
         if self.tied_embedding:
             self.head.weight = self.token_embedding.weight
+            
+        # Karpathy-style weight initialization
+        self.apply(self._init_weights)
+        
+        # Apply special scaled init to residual projections (per GPT-2 paper)
+        for pn, p in self.named_parameters():
+            if pn.endswith('QKV_linear.weight') or pn.endswith('down_proj.weight'):
+                torch.nn.init.normal_(p, mean=0.0, std=0.02 / (2 * num_layers)**0.5)
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
     
     def clear_kv_cache(self):
         for layer in self.layers:
@@ -262,19 +280,32 @@ class GPT2Model(nn.Module):
 
         if labels is not None:
             # earlier it was creating loss function inside forward which is inefficient as it creates new object everyd time
-            loss = self.loss_fct(logits.view(-1, logits.size(-1)), labels.view(-1))
+            loss = self.loss_fct(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
             return logits, loss
         return logits
     
     @torch.no_grad() # important so that pytorch doesnt track diff gradients in generation which is inference
-    def generate(self,tokenized_context,max_new_tokens=10,use_cache=True):
+    def generate(self,tokenized_context,
+                max_new_tokens=10,
+                use_cache=True,
+                temperature=1.0,
+                top_k=None,
+                ):
         input_ids = tokenized_context['input_ids']
         output = []
         train_mode = False
         curr_len = input_ids.shape[-1]
         for k in range(max_new_tokens):
             output_logits = self.forward(input_ids,labels=None,use_cache=use_cache,train_mode=train_mode,curr_len=curr_len)
-            out_token = torch.argmax(output_logits[:,-1,:],dim=-1).reshape(-1,1)
+            output_logits = output_logits[:, -1, :] / temperature
+
+            if top_k is not None:
+                v, _ = torch.topk(output_logits, top_k)
+                output_logits[output_logits < v[:, [-1]]] = -float("inf")
+
+            probs = torch.softmax(output_logits, dim=-1)
+
+            out_token = torch.multinomial(probs, 1)
             if use_cache:
                 input_ids = out_token
                 # print(input_ids.shape)
