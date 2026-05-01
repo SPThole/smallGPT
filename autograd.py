@@ -145,7 +145,7 @@ if __name__ == "__main__":
     d = a**2*c - a+b + 4 
     o = Tensor.trace(d)
     dot = Tensor.draw_graph(d)
-    dot.render("computation_graph", view=True)
+    dot.render("output_artifacts/plots/computation_graph", view=True)
     d.backwards()
     print(a.grad,b.grad,c.grad)
 
