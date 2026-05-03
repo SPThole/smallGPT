@@ -291,6 +291,7 @@ class GPT2Model(nn.Module):
                 temperature=1.0,
                 top_k=None,
                 ):
+        self.clear_kv_cache()
         input_ids = tokenized_context['input_ids']
         output = []
         train_mode = False
