@@ -11,4 +11,5 @@ Lots and lots of exploratory code and implementation of everything in LLM from s
 *   [x] Automatic Differentiation for scalar vars
 *   [x] Character level tokenizer
 *   [x] MultiHead Latent Attention
+*   [x] End to End Char Level training pipeline
 
