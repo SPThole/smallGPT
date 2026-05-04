@@ -266,7 +266,7 @@ if __name__ == "__main__":
 
     # filter data
     args = parser.parse_args()
-    data = load_dataset(args.dataset_path, split="train").select(range(100))
+    data = load_dataset(args.dataset_path, split="train")
     logger.info(f"Loaded dataset with {len(data)} samples")
     data = data.train_test_split(test_size=0.1)
     data = data.map(process_row, 
