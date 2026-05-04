@@ -218,7 +218,14 @@ class GPT2Model(nn.Module):
                  pad_token_id = -100
                  ):
         super().__init__()
-
+        self.vocab_size = vocab_size
+        self.embedding_size = embedding_size
+        self.context_length = context_length
+        self.head_dim = head_dim
+        self.num_heads = num_heads
+        self.num_layers = num_layers
+        self.up_proj_size = up_proj_size
+        self.gqa_factor = gqa_factor
         self.token_embedding = nn.Embedding(vocab_size, embedding_size)
         self.positional_embedding = nn.Embedding(context_length, embedding_size)
         self.tied_embedding = tied_embedding
